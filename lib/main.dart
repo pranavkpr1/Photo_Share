@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
@@ -22,21 +21,8 @@ import 'package:photofilters/filters/preset_filters.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:progress_indicators/progress_indicators.dart';
-import 'global.dart';
 
 Function() _refreshCallback;
-var time = DateTime.now().millisecondsSinceEpoch;
-var today = DateTime.now().weekday;
-var apiUrl = "http://dailybits.in/da.php?time=" + time.toString();
-const days = [
-  "Monday",
-  "Tuesday",
-  "Wednusday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday"
-];
 const Color buttonColor=const Color(0xFFF37E37);
 const Color accentColor=const Color(0xFFF27718);
 final _random = new Random();
@@ -56,7 +42,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Jagnik',
+      title: 'DevDarshan Photo Share',
       theme: ThemeData(
         buttonTheme: ButtonThemeData(
             buttonColor:  buttonColor,
@@ -78,8 +64,7 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage>
-    with SingleTickerProviderStateMixin {
+class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
   double _initialSliderHeight = 80;
   double _sliderHeight = 80;
   TabController tabController;
@@ -89,11 +74,13 @@ class _MyHomePageState extends State<MyHomePage>
   double editBoxSize = 200.0;
   double x = 10.0;
   double y = 100.0;
+  Directory cache;
+
   BoxDecoration editBoxDecorator = BoxDecoration(
       border: Border.all(color: Colors.lightBlueAccent, width: 2.0),
       borderRadius: BorderRadius.all(Radius.circular(5.0)));
-  final String appName = "JAGNIK";
-  String textToShare = "Happy ${days[today - 1]}!";
+
+  String textToShare;
   final textController = TextEditingController();
   String previewImage;
   double fontSize = 40.0;
@@ -136,7 +123,7 @@ class _MyHomePageState extends State<MyHomePage>
     tabController = new TabController(length: 3, vsync: this);
     selectedTextstyle =
         TextStyle(color: Colors.white, fontSize: 40, fontFamily: "Lato");
-    localPath();
+
     textToShare = quotes[_random.nextInt(quotes.length)];
     textController.text = textToShare;
     _loadAImagesFromDownload();
@@ -145,10 +132,18 @@ class _MyHomePageState extends State<MyHomePage>
     super.initState();
 
   }
+   void dispose(){
+
+     if(cache!=null && cache.existsSync() )
+     cache.deleteSync(recursive: true);
+
+    super.dispose();
+   }
 
    void _refresh() {
      setState(() {});
    }
+
   Future<List<String>> _loadAImagesFromDownload() async {
     try {
       final directory = await getExternalStorageDirectory();
@@ -284,7 +279,7 @@ class _MyHomePageState extends State<MyHomePage>
             _backgrounds,
             _fontSizes,
             menusOnFont),
-        //showProgressOnGenerate ? Center(child: CircularProgressIndicator(),) : Column()
+
       ],
     )));
   }
@@ -340,29 +335,7 @@ class _MyHomePageState extends State<MyHomePage>
 
   }
 
-  Widget _screenShotButton(BuildContext context) {
-    return Positioned(
-      top: 30,
-      right: 20,
-      child: RaisedButton(
-        disabledColor: buttonColor,
-        child: Text(
-          'Share',
-          style: TextStyle(fontSize: 12),
-        ),
-        onPressed: () {
-          if(!showProgressOnGenerate){
-            FocusScope.of(context).requestFocus(FocusNode());
-            asyncButtonCall =true;
-            _refreshCallback();
-            takeScreenShot(context);
 
-
-          }
-        },
-      ),
-    );
-  }
 
   //bottom menu for filters and font size
   Widget _appBottomSheetMenus(
@@ -519,66 +492,157 @@ class _MyHomePageState extends State<MyHomePage>
     );
   }
 
-  Widget _makeBackground(image) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          imageSource = "internet";
-          backgroundImage = image;
-        });
-      },
-      child: Container(
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: Colors.blueGrey,
-          shape: BoxShape.rectangle,
-        ),
-        child: CachedNetworkImage(
-          placeholder: (context, url) => CircularProgressIndicator(),
-          imageUrl: image + "?w=120",
-          imageBuilder: (context, imageProvider) => Container(
-            decoration: BoxDecoration(
-                image:
-                    DecorationImage(image: imageProvider, fit: BoxFit.cover)),
-          ),
-          errorWidget: (context, url, error) =>Container(
-            child: Icon(Icons.error,color: Colors.white70,),
-          ),
-        ),
-      ),
-    );
+
+  //DevDarshan show the filters in UI
+  Widget _filterList() {
+    return
+      Container(
+          child: SingleChildScrollView(
+              child: Column(
+                children: <Widget>[
+                  Divider(height: 2),
+                  Container(
+                      width: MediaQuery
+                          .of(context)
+                          .size
+                          .width,
+                      margin: EdgeInsets.symmetric(
+                        vertical: 5,
+                      ),
+                      height: 30,
+                      child: ListView.builder(
+                          itemCount: presetFiltersList.length,
+                          scrollDirection: Axis.horizontal,
+                          shrinkWrap: true,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Column(
+                              children: <Widget>[
+                                GestureDetector(
+                                  onTap:()  {
+
+                                asyncButtonCall=true;
+                                _refreshCallback();
+
+                                applyFilter(presetFiltersList[index], backgroundImage);
+
+
+                                  },
+
+                                child:Center(
+                                  //padding: const EdgeInsets.only(left:5.0),
+                                  child:Text(presetFiltersList[index].name+" ", style: TextStyle(
+                                    color: Colors.white,
+                                  ),),
+                                )),
+                              ],
+                            );
+                          }
+
+                      )
+
+                  )
+                ],
+              )
+          )
+      );
+
   }
 
-  //DevDarshan pick from gallery icon in the third tab of predefined photos & existing photos
-  Widget _pickfromGallery() {
-    return GestureDetector(
-      onTap: () {
+
+  //DevDarshan apply filter on the image
+  void applyFilter(Filter filter, String src) async {
+
+    ImageLib.Image image;
+
+    // get image bytes based on the file location in gallery or on internet
+    if(imageSource=="gallery")
+      image =ImageLib.decodeImage(await File(src).readAsBytes());
+    else {
+      http.Response response = await http.get(src);
+      image=ImageLib.decodeImage(response.bodyBytes);
+    }
+
+    //apply filter on bytes of image
+    var pixels = image.getBytes();
+    filter.apply(pixels, image.width, image.height);
+    ImageLib.Image outputImage = ImageLib.Image.fromBytes(image.width, image.height, pixels);
+
+    //temporary storage for saving the filtered image
+
+    if(cache==null)
+     cache = await getTemporaryDirectory();
+
+    var _file = cache.path;
+    String now = DateTime.now().toString();
+    now = now.split(new RegExp(r"(:|-)")).join("_");
+    now = now.split(" ").join("_");
+    now = now.split(".").join("_");
+    String _filename = '$_file/q-$now.png';
+    File imgFile = new File(_filename);
+
+    //save the filtered image in temporary storage
+    await imgFile.writeAsBytes(ImageLib.encodeNamedImage(outputImage, _filename));
+
+    //change the path for background image after the filter
+    if (imgFile != null && imgFile.lengthSync()!=0){
+
+      setState(() {
+        zoom = null;
+      });
+      setState(() {
+        imageSource = "gallery";
+        backgroundImage = imgFile.path;
+        zoom = new ZoomableImage(
+          FileImage(File(backgroundImage)),
+          placeholder: Center(child: CircularProgressIndicator(),),
+          imageName: _filename,
+        );
+        oldzoom = zoom;
+
+
+      });
+      //if( Store.refreshZoomImage!=null)
+      //Store.refreshZoomImage();
+
+      asyncButtonCall=false;
+      _refreshCallback();
+    }
+    else {
+      if (oldzoom != null)
         setState(() {
-          zoom = null;
+          zoom = oldzoom;
+          asyncButtonCall=false;
+          _refreshCallback();
         });
-        getImageFromGallery();
-      },
-      child: Container(
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: Color.fromARGB(200, 102, 153, 204),
-          shape: BoxShape.rectangle,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Icon(
-              Icons.camera,
-              size: 50,
-              color: Colors.white,
+    }
+  }
+
+ //DevDarshan Play with the text
+  Widget lyricsText(_width, _height, context) {
+    return Positioned(
+      top: y,
+      left: x,
+      child: GestureDetector(
+          onPanUpdate: (tap) {
+            setState(() {
+              if ((x + editBoxSize + tap.delta.dx - 100) < _width)
+                x += tap.delta.dx;
+              if ((y + tap.delta.dy) < _height) y += tap.delta.dy;
+            });
+          },
+          onTap: () {
+            showEditBox(context);
+            ;
+          },
+          child: Container(
+            width: editBoxSize,
+            padding: EdgeInsets.all(10.0),
+            child: Text(
+              textToShare,
+              style: selectedTextstyle,
+              textAlign: textAlign,
             ),
-            Text(
-              "Gallery",
-              style: TextStyle(color: Colors.white),
-            )
-          ],
-        ),
-      ),
+          )),
     );
   }
 
@@ -635,225 +699,29 @@ class _MyHomePageState extends State<MyHomePage>
       },
       child: selectedFont == fontStyle["text"]
           ? Container(
-              alignment: Alignment.center,
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                  color: buttonColor,
-                  borderRadius: BorderRadius.all(Radius.circular(5)),
-                  border: Border.all(color: Colors.lightBlueAccent, width: 3)),
-              child: Text(
-                "Aa",
-                style: font,
-              ),
-            )
+        alignment: Alignment.center,
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+            color: buttonColor,
+            borderRadius: BorderRadius.all(Radius.circular(5)),
+            border: Border.all(color: Colors.lightBlueAccent, width: 3)),
+        child: Text(
+          "Aa",
+          style: font,
+        ),
+      )
           : Container(
-              alignment: Alignment.center,
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                  color: buttonColor,
-                  borderRadius: BorderRadius.all(Radius.circular(5)),
-                  border: Border.all(color: Colors.grey, width: 0)),
-              child: Text(
-                "Aa",
-                style: font,
-              ),
-            ),
-    );
-  }
-
-  //DevDarshan merge image with filters and text and ready to share
-  takeScreenShot(BuildContext context) async {
-    setState(() {
-      showProgressOnGenerate = true;
-    });
-    RenderRepaintBoundary boundary =
-        previewContainer.currentContext.findRenderObject();
-    double pixelRatio =
-        MediaQuery.of(context).size.height / MediaQuery.of(context).size.width;
-
-    ui.Image image = await boundary.toImage(pixelRatio: pixelRatio);
-    ByteData byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-    Uint8List pngBytes = byteData.buffer.asUint8List();
-    final directory = await getExternalStorageDirectory();
-    var _file = directory.path;
-    String now = DateTime.now().toString();
-    now = now.split(new RegExp(r"(:|-)")).join("_");
-    now = now.split(" ").join("_");
-    now = now.split(".").join("_");
-    String _filename = '$_file/q-$now.png';
-    File imgFile = new File(_filename);
-    imgFile.writeAsBytesSync(pngBytes);
-
-    setState(() {
-      previewImage =_filename;
-      showProgressOnGenerate =false;
-    });
-
-    share();
-  }
-
-  Widget _filterList() {
-    return
-      Container(
-          child: SingleChildScrollView(
-              child: Column(
-                children: <Widget>[
-                  Divider(height: 2),
-                  Container(
-                      width: MediaQuery
-                          .of(context)
-                          .size
-                          .width,
-                      margin: EdgeInsets.symmetric(
-                        vertical: 5,
-                      ),
-                      height: 30,
-                      child: ListView.builder(
-                          itemCount: presetFiltersList.length,
-                          scrollDirection: Axis.horizontal,
-                          shrinkWrap: true,
-                          itemBuilder: (BuildContext context, int index) {
-                            return Column(
-                              children: <Widget>[
-                                GestureDetector(
-                                  onTap:()  {
-
-                                asyncButtonCall=true;
-                                _refreshCallback();
-
-                                applyFilter(presetFiltersList[index], backgroundImage);
-
-
-                                  },
-
-                                child:Center(
-                                  //padding: const EdgeInsets.only(left:5.0),
-                                  child:Text(presetFiltersList[index].name+" ", style: TextStyle(
-                                    color: Colors.white,
-                                  ),),
-                                )),
-                              ],
-                            );
-                          }
-
-                      )
-
-                  )
-                ],
-              )
-          )
-      );
-
-  }
-  void applyFilter(Filter filter, String src) async {
-
-    ImageLib.Image image;
-
-    // get image bytes based on the file location in gallery or on internet
-    if(imageSource=="gallery")
-      image =ImageLib.decodeImage(await File(src).readAsBytes());
-    else {
-      http.Response response = await http.get(src);
-      image=ImageLib.decodeImage(response.bodyBytes);
-    }
-
-    //apply filter on bytes of image
-    var pixels = image.getBytes();
-    filter.apply(pixels, image.width, image.height);
-    ImageLib.Image outputImage = ImageLib.Image.fromBytes(image.width, image.height, pixels);
-
-    //temporary storage for saving the filtered image
-    final directory = await getTemporaryDirectory();
-    var _file = directory.path;
-    String now = DateTime.now().toString();
-    now = now.split(new RegExp(r"(:|-)")).join("_");
-    now = now.split(" ").join("_");
-    now = now.split(".").join("_");
-    String _filename = '$_file/q-$now.png';
-    File imgFile = new File(_filename);
-
-    //save the filtered image in temporary storage
-    await imgFile.writeAsBytes(ImageLib.encodeNamedImage(outputImage, _filename));
-
-    //change the path for background image after the filter
-    if (imgFile != null && imgFile.lengthSync()!=0){
-
-      setState(() {
-        zoom = null;
-      });
-      setState(() {
-        imageSource = "gallery";
-        backgroundImage = imgFile.path;
-        zoom = new ZoomableImage(
-          FileImage(File(backgroundImage)),
-          placeholder: Center(child: CircularProgressIndicator(),),
-          imageName: _filename,
-        );
-        oldzoom = zoom;
-
-
-      });
-      //if( Store.refreshZoomImage!=null)
-      //Store.refreshZoomImage();
-
-      asyncButtonCall=false;
-      _refreshCallback();
-    }
-    else {
-      if (oldzoom != null)
-        setState(() {
-          zoom = oldzoom;
-          asyncButtonCall=false;
-          _refreshCallback();
-        });
-    }
-  }
-
-
-  Future<String> localPath() async {
-    // make these changes in first launch of the app
-    // check available directories
-    // create an application directory too available path
-    // store file path in share preferences  to save a file in shared preferences
-    try {
-      final directory = await getApplicationSupportDirectory();
-      List externalDirectory = await getExternalStorageDirectories();
-      new Directory(directory.path)
-          .create(recursive: true)
-          .then((Directory newdir) {
-        // if error in directory creation
-      });
-      return directory.path;
-    } catch (err) {
-      return null;
-    }
-  }
- //DevDarshan Play with the text
-  Widget lyricsText(_width, _height, context) {
-    return Positioned(
-      top: y,
-      left: x,
-      child: GestureDetector(
-          onPanUpdate: (tap) {
-            setState(() {
-              if ((x + editBoxSize + tap.delta.dx - 100) < _width)
-                x += tap.delta.dx;
-              if ((y + tap.delta.dy) < _height) y += tap.delta.dy;
-            });
-          },
-          onTap: () {
-            showEditBox(context);
-            ;
-          },
-          child: Container(
-            width: editBoxSize,
-            padding: EdgeInsets.all(10.0),
-            child: Text(
-              textToShare,
-              style: selectedTextstyle,
-              textAlign: textAlign,
-            ),
-          )),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+            color: buttonColor,
+            borderRadius: BorderRadius.all(Radius.circular(5)),
+            border: Border.all(color: Colors.grey, width: 0)),
+        child: Text(
+          "Aa",
+          style: font,
+        ),
+      ),
     );
   }
 
@@ -897,11 +765,38 @@ class _MyHomePageState extends State<MyHomePage>
         ));
   }
 
-  void share() {
-    asyncButtonCall =false;
-    _refreshCallback();
-    Share.shareFiles([previewImage == null ? null : previewImage], text: 'Download DevDarshan');
 
+  //DevDarshan pick from gallery icon in the third tab of predefined photos & existing photos
+  Widget _pickfromGallery() {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          zoom = null;
+        });
+        getImageFromGallery();
+      },
+      child: Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Color.fromARGB(200, 102, 153, 204),
+          shape: BoxShape.rectangle,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Icon(
+              Icons.camera,
+              size: 50,
+              color: Colors.white,
+            ),
+            Text(
+              "Gallery",
+              style: TextStyle(color: Colors.white),
+            )
+          ],
+        ),
+      ),
+    );
   }
 
   // DevDarshan pick images from the gallery & also pinch to zoom functionality
@@ -923,5 +818,97 @@ class _MyHomePageState extends State<MyHomePage>
       setState(() {
         zoom = oldzoom;
       });
+  }
+
+  // DevDarshan make bacground of already created images for sharing
+  Widget _makeBackground(image) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          imageSource = "internet";
+          backgroundImage = image;
+        });
+      },
+      child: Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.blueGrey,
+          shape: BoxShape.rectangle,
+        ),
+        child: CachedNetworkImage(
+          placeholder: (context, url) => CircularProgressIndicator(),
+          imageUrl: image + "?w=120",
+          imageBuilder: (context, imageProvider) => Container(
+            decoration: BoxDecoration(
+                image:
+                DecorationImage(image: imageProvider, fit: BoxFit.cover)),
+          ),
+          errorWidget: (context, url, error) =>Container(
+            child: Icon(Icons.error,color: Colors.white70,),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _screenShotButton(BuildContext context) {
+    return Positioned(
+      top: 30,
+      right: 20,
+      child: RaisedButton(
+        disabledColor: buttonColor,
+        child: Text(
+          'Share',
+          style: TextStyle(fontSize: 12),
+        ),
+        onPressed: () {
+          if(!showProgressOnGenerate){
+            FocusScope.of(context).requestFocus(FocusNode());
+            asyncButtonCall =true;
+            _refreshCallback();
+            takeScreenShot(context);
+
+
+          }
+        },
+      ),
+    );
+  }
+
+  takeScreenShot(BuildContext context) async {
+    setState(() {
+      showProgressOnGenerate = true;
+    });
+    RenderRepaintBoundary boundary =
+    previewContainer.currentContext.findRenderObject();
+    double pixelRatio =
+        MediaQuery.of(context).size.height / MediaQuery.of(context).size.width;
+
+    ui.Image image = await boundary.toImage(pixelRatio: pixelRatio);
+    ByteData byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    Uint8List pngBytes = byteData.buffer.asUint8List();
+    final directory = await getExternalStorageDirectory();
+    var _file = directory.path;
+    String now = DateTime.now().toString();
+    now = now.split(new RegExp(r"(:|-)")).join("_");
+    now = now.split(" ").join("_");
+    now = now.split(".").join("_");
+    String _filename = '$_file/q-$now.png';
+    File imgFile = new File(_filename);
+    imgFile.writeAsBytesSync(pngBytes);
+
+    setState(() {
+      previewImage =_filename;
+      showProgressOnGenerate =false;
+    });
+
+    share();
+  }
+
+  void share() {
+    asyncButtonCall =false;
+    _refreshCallback();
+    Share.shareFiles([previewImage == null ? null : previewImage], text: 'Download DevDarshan');
+
   }
 }
