@@ -4,13 +4,11 @@ import 'dart:ui' as ui;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-
 import 'global.dart';
 
 // source : https://raw.githubusercontent.com/perlatus/flutter_zoomable_image/master/lib/src/zoomable_image.dart
 // Given a canvas and an image, determine what size the image should be to be
 // contained in but not exceed the canvas while preserving its aspect ratio.
-Size _containmentSize(Size canvas, Size image) {}
 
 class ZoomableImage extends StatefulWidget {
   final ImageProvider image;
@@ -20,24 +18,28 @@ class ZoomableImage extends StatefulWidget {
   final GestureTapCallback onTap;
   final Color backgroundColor;
   final Widget placeholder;
-  final String imageName;
+  String imageName;
+  String oldImageName;
 
   ZoomableImage(
-      this.image, {
+      {
         Key key,
-        @deprecated double scale,
+        this.image,
+        this.imageName,
+        this.oldImageName,
+        this.placeholder,
 
+        @deprecated double scale,
+        this.onTap,
+        this.colorFilter,
         /// Maximum ratio to blow up image pixels. A value of 2.0 means that the
         /// a single device pixel will be rendered as up to 4 logical pixels.
         this.maxScale = 2.0,
         this.minScale = 0.0,
-        this.onTap,
         this.backgroundColor = Colors.black,
-        this.colorFilter,
-        this.imageName,
-        /// Placeholder widget to be used while [image] is being resolved.
-        this.placeholder,
-      }) : super(key: key);
+      }
+
+      ) : super(key: key);
 
   @override
   _ZoomableImageState createState() => new _ZoomableImageState();
@@ -48,11 +50,8 @@ class _ZoomableImageState extends State<ZoomableImage> {
   ImageStream _imageStream;
   ui.Image _image;
   Size _imageSize;
-  String _imageName;
-
 
   Offset _startingFocalPoint;
-
   Offset _previousOffset;
   Offset _offset; // where the top left corner of the image is drawn
 
@@ -138,15 +137,21 @@ class _ZoomableImageState extends State<ZoomableImage> {
   }
   @override
   Widget build(BuildContext ctx) {
+
+    if(widget.oldImageName!=widget.imageName) {
+      _resolveImage();
+      widget.oldImageName=widget.imageName;
+    }
+
+
     Widget paintWidget() {
       return new CustomPaint(
         child: new Container(color: widget.backgroundColor),
         foregroundPainter: new _ZoomableImagePainter(
           image: _image,
-          imageWidget: widget.image,
+          //imageWidget: widget.image,
           offset: _offset,
           scale: _scale,
-
             imageName: widget.imageName
         ),
       );
@@ -174,22 +179,9 @@ class _ZoomableImageState extends State<ZoomableImage> {
     });
   }
 
-  @override
-  void didChangeDependencies() {
-    _resolveImage();
-    super.didChangeDependencies();
-  }
-
-  @override
-  void reassemble() {
-    _resolveImage(); // in case the image cache was flushed
-    super.reassemble();
-  }
-
-
-
 
   void _resolveImage() {
+
     _imageStream = widget.image.resolve(createLocalImageConfiguration(context));
 
     _imageStream.addListener(ImageStreamListener((ImageInfo info, bool synchronousCall){
@@ -208,14 +200,14 @@ class _ZoomableImageState extends State<ZoomableImage> {
 }
 
 class _ZoomableImagePainter extends CustomPainter {
-  const _ZoomableImagePainter({this.image, this.offset, this.scale,this.imageName,this.imageWidget});
+  const _ZoomableImagePainter({this.image, this.offset, this.scale,this.imageName});
 
   final ui.Image image;
   final Offset offset;
   final double scale;
 
   final String imageName;
-  final ImageProvider imageWidget;
+
 
   @override
   void paint(Canvas canvas, Size canvasSize) {

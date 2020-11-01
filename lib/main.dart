@@ -28,6 +28,7 @@ const Color accentColor=const Color(0xFFF27718);
 final _random = new Random();
 bool asyncButtonCall=false;
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
@@ -90,7 +91,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   String filterApplied = "default";
   Widget zoom;
   Widget oldzoom;
-
+  String oldImageName;
 
   List backgrounds = [
     "https://images.unsplash.com/photo-1472552944129-b035e9ea3744",
@@ -129,6 +130,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     _loadAImagesFromDownload();
     _refreshCallback=_refresh;
     asyncButtonCall=false;
+    oldImageName="";
     super.initState();
 
   }
@@ -593,11 +595,13 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         imageSource = "gallery";
         backgroundImage = imgFile.path;
         zoom = new ZoomableImage(
-          FileImage(File(backgroundImage)),
+          image:FileImage(File(backgroundImage)),
           placeholder: Center(child: CircularProgressIndicator(),),
           imageName: _filename,
+          oldImageName:oldImageName
         );
         oldzoom = zoom;
+        oldImageName=_filename;
 
 
       });
@@ -807,11 +811,13 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         imageSource = "gallery";
         backgroundImage = image.path;
           zoom = ZoomableImage(
-          FileImage(File(backgroundImage)),
+          image:FileImage(File(backgroundImage)),
           placeholder: Center(child: CircularProgressIndicator(),),
           imageName: backgroundImage,
+          oldImageName: oldImageName
         );
         oldzoom = zoom;
+        oldImageName=backgroundImage;
       });
     else
       if(oldzoom != null)
