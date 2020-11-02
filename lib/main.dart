@@ -25,6 +25,8 @@ import 'package:progress_indicators/progress_indicators.dart';
 Function() _refreshCallback;
 const Color buttonColor=const Color(0xFFF37E37);
 const Color accentColor=const Color(0xFFF27718);
+const Color highlightColor=const Color(0xFFF5AB2E);//const Color(0xFFF2673B)
+//const Color appBarColor2=const Color(0xFFF2673B);
 final _random = new Random();
 bool asyncButtonCall=false;
 
@@ -50,7 +52,7 @@ class MyApp extends StatelessWidget {
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(5.0))),
             textTheme: ButtonTextTheme.primary),
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.orange,
       ),
       home: MyHomePage(),
     );
@@ -78,14 +80,15 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   Directory cache;
 
   BoxDecoration editBoxDecorator = BoxDecoration(
-      border: Border.all(color: Colors.lightBlueAccent, width: 2.0),
+      border: Border.all(color: highlightColor, width: 2.0),
       borderRadius: BorderRadius.all(Radius.circular(5.0)));
 
   String textToShare;
   final textController = TextEditingController();
   String previewImage;
-  double fontSize = 40.0;
+  double fontSize = 30.0;
   String selectedFont = "Lato";
+  Color selectedFontColor=Colors.white;
   TextAlign textAlign = TextAlign.start;
   bool showProgressOnGenerate= false;
   String filterApplied = "default";
@@ -123,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   void initState() {
     tabController = new TabController(length: 3, vsync: this);
     selectedTextstyle =
-        TextStyle(color: Colors.white, fontSize: 40, fontFamily: "Lato");
+        TextStyle(color: Colors.white, fontSize: 30, fontFamily: "Lato");
 
     textToShare = quotes[_random.nextInt(quotes.length)];
     textController.text = textToShare;
@@ -177,9 +180,9 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   ];
 
   List fontsizes = [
+    {"size": 30.0},
     {"size": 40.0},
-    {"size": 50.0},
-    {"size": 60.0}
+    {"size": 50.0}
   ];
 
   @override
@@ -200,11 +203,11 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                   selectedTextstyle = TextStyle(
                       fontSize: font["size"],
                       fontFamily: selectedFont,
-                      color: Colors.white);
+                      color: selectedFontColor);
                 });
               },
               child: Container(
-                color: Colors.blueGrey,
+                color: buttonColor,
                 alignment: Alignment.center,
                 child: Text(
                   "A",
@@ -226,7 +229,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           });
         },
         child: Container(
-            color: Colors.blueGrey,
+            color: buttonColor,
             child: Icon(
               align == "left"
                   ? Icons.format_align_left
@@ -260,9 +263,9 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         children: <Widget>[
         Center(
         child: HeartbeatProgressIndicator(
-        child: FaIcon(FontAwesomeIcons.om, size: 10))),
+        child: FaIcon(FontAwesomeIcons.om, size: 10, color:Colors.white))),
     SizedBox(height: 8),
-    Text('Please wait...'),
+    Text('Please wait...', style: TextStyle(color:Colors.white)),
     ]))),
     child:
         Stack(
@@ -379,9 +382,9 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                   child: Column(
                     children: <Widget>[
                       new TabBar(controller: tabController, tabs: [
-                        new Tab(icon: const Icon(Icons.filter_vintage)),
-                        new Tab(icon: const Icon(Icons.font_download)),
-                        new Tab(icon: const Icon(Icons.image))
+                        new Tab(icon: const Icon(Icons.filter_vintage, color:Colors.white)),
+                        new Tab(icon: const Icon(Icons.font_download, color:Colors.white)),
+                        new Tab(icon: const Icon(Icons.image, color:Colors.white))
                       ]),
                       Expanded(
                           child: SizedBox(
@@ -389,29 +392,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                   controller: tabController,
                                   children: [
                             _filterList(),
-                            CustomScrollView(
-                              primary: false,
-                              slivers: <Widget>[
-                                SliverPadding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(10, 10, 20, 0),
-                                  sliver: SliverGrid.count(
-                                      crossAxisSpacing: 20,
-                                      mainAxisSpacing: 10,
-                                      crossAxisCount: 6,
-                                      children: menusOnFont),
-                                ),
-                                SliverPadding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(20, 10, 20, 30),
-                                  sliver: SliverGrid.count(
-                                      crossAxisSpacing: 10,
-                                      mainAxisSpacing: 10,
-                                      crossAxisCount: 3,
-                                      children: _layouts),
-                                ),
-                              ],
-                            ),
+                              _textList(menusOnFont,_layouts),
                             CustomScrollView(
                               primary: false,
                               slivers: <Widget>[
@@ -485,7 +466,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                       fit: BoxFit.fill,
                       child: Icon(
                         Icons.first_page,
-                        color: Colors.white70,
+                        color: Colors.white,
                         size: 30,
                       ),
                     ),
@@ -502,7 +483,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           child: SingleChildScrollView(
               child: Column(
                 children: <Widget>[
-                  Divider(height: 2),
+                  Divider(height: 5),
                   Container(
                       width: MediaQuery
                           .of(context)
@@ -521,9 +502,10 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                               children: <Widget>[
                                 GestureDetector(
                                   onTap:()  {
-
-                                asyncButtonCall=true;
-                                _refreshCallback();
+                              setState(() {
+                                asyncButtonCall = true;
+                              });
+                                //_refreshCallback();
 
                                 applyFilter(presetFiltersList[index], backgroundImage);
 
@@ -532,7 +514,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
                                 child:Center(
                                   //padding: const EdgeInsets.only(left:5.0),
-                                  child:Text(presetFiltersList[index].name+" ", style: TextStyle(
+                                  child:Text(presetFiltersList[index].name+"   ", style: TextStyle(
                                     color: Colors.white,
                                   ),),
                                 )),
@@ -605,9 +587,6 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
 
       });
-      //if( Store.refreshZoomImage!=null)
-      //Store.refreshZoomImage();
-
       asyncButtonCall=false;
       _refreshCallback();
     }
@@ -615,12 +594,125 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       if (oldzoom != null)
         setState(() {
           zoom = oldzoom;
-          asyncButtonCall=false;
-          _refreshCallback();
+
         });
+      asyncButtonCall=false;
+      _refreshCallback();
     }
   }
 
+  Widget _textList(menusOnFont,_layouts){
+
+    final List<String> colorList=["FFFFFF","808080", "000000","F68C24","F5AB2E","F2673B", "FF0000", "800000", "FFFF00", "808000","00FF00", "008000", "00FFFF", "008080", "0000FF", "000080", "FF00FF", "800080"];
+
+    return CustomScrollView(
+      primary: false,
+      slivers: <Widget>[
+        SliverToBoxAdapter(child:
+        SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                Divider(height: 2),
+                Container(
+                    width: MediaQuery
+                        .of(context)
+                        .size
+                        .width,
+                    margin: EdgeInsets.symmetric(
+                      vertical: 5,
+                    ),
+                    height: 20,
+                    child: ListView.builder(
+                        itemCount: colorList.length,
+                        scrollDirection: Axis.horizontal,
+                        shrinkWrap: true,
+                        itemBuilder: (BuildContext context, int index) {
+                          return Column(
+                            children: <Widget>[
+                              GestureDetector(
+                                onTap:()  {
+                                  setState(() {
+                                    selectedFontColor=hexToColor(colorList[index]);
+                                    selectedTextstyle = TextStyle(
+                                        fontSize: fontSize,
+                                        fontFamily: selectedFont,
+                                        color: hexToColor(colorList[index]));
+                                  });
+
+                                },
+                                child:Container(
+                                  width:15,
+                                  height:18,
+                                  margin: EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: hexToColor(colorList[index]),
+                                    shape: BoxShape.circle,
+
+
+                                  ),
+                                  child: Container(
+                                    padding: EdgeInsets.all(
+                                      2,
+                                    ),
+
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+
+                    )
+
+                )
+              ],
+            )
+        )),
+        SliverPadding(
+          padding:
+          const EdgeInsets.fromLTRB(10, 10, 20, 0),
+          sliver: SliverGrid.count(
+              crossAxisSpacing: 20,
+              mainAxisSpacing: 10,
+              crossAxisCount: 6,
+              children: menusOnFont),
+        ),
+    SliverToBoxAdapter(child:SizedBox(height:5)),
+        SliverToBoxAdapter(child:
+         SingleChildScrollView(
+                child: Column(
+                children: <Widget>[
+                Divider(height: 2),
+                Container(
+                width: MediaQuery
+                    .of(context)
+                    .size
+                    .width,
+                margin: EdgeInsets.symmetric(
+                vertical: 5,
+                ),
+                height: 65,
+                child: ListView.builder(
+                itemCount: _layouts.length,
+                scrollDirection: Axis.horizontal,
+                shrinkWrap: true,
+                itemBuilder: (BuildContext context, int index) {
+                  return Row(
+                  children:<Widget>[
+                    _layouts[index],
+                    SizedBox(width:8)
+                      ]);
+                }
+               ))])))
+      ],
+    );
+  }
+
+  Color hexToColor(String code) {
+    return new Color(int.parse(code.substring(0, 6), radix: 16) + 0xFF000000);
+  }
  //DevDarshan Play with the text
   Widget lyricsText(_width, _height, context) {
     return Positioned(
@@ -655,40 +747,40 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     var font;
     switch (fontStyle["text"]) {
       case "lato":
-        font = TextStyle(color: Colors.white, fontSize: 40, fontFamily: "Lato");
+        font = TextStyle(color: Colors.white, fontSize: 30, fontFamily: "Lato");
         break;
       case "poiretOne":
         font = TextStyle(
-            color: Colors.white, fontSize: 40, fontFamily: "PoiretOne");
+            color: Colors.white, fontSize: 30, fontFamily: "PoiretOne");
         break;
       case "monotone":
         font =
-            TextStyle(color: Colors.white, fontSize: 40, fontFamily: "Monoton");
+            TextStyle(color: Colors.white, fontSize: 30, fontFamily: "Monoton");
         break;
       case "BungeeInline":
         font = TextStyle(
-            color: Colors.white, fontSize: 40, fontFamily: "BungeeInline");
+            color: Colors.white, fontSize: 30, fontFamily: "BungeeInline");
         break;
       case "FrederickatheGreat":
         font = TextStyle(
             color: Colors.white,
-            fontSize: 40,
+            fontSize: 30,
             fontFamily: "FrederickatheGreat");
         break;
       case "ConcertOne":
         font = TextStyle(
-            color: Colors.white, fontSize: 40, fontFamily: "ConcertOne");
+            color: Colors.white, fontSize: 30, fontFamily: "ConcertOne");
         break;
       case "Martel":
         font =
-            TextStyle(color: Colors.white, fontSize: 40, fontFamily: "Martel");
+            TextStyle(color: Colors.white, fontSize: 30, fontFamily: "Martel");
         break;
       case "Vidaloka":
         font = TextStyle(
-            color: Colors.white, fontSize: 40, fontFamily: "Vidaloka");
+            color: Colors.white, fontSize: 30, fontFamily: "Vidaloka");
         break;
       default:
-        font = TextStyle(color: Colors.white, fontSize: 40, fontFamily: "Lato");
+        font = TextStyle(color: Colors.white, fontSize: 30, fontFamily: "Lato");
     }
 
     return GestureDetector(
@@ -696,7 +788,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         setState(() {
           selectedFont = fontStyle["text"];
           selectedTextstyle = TextStyle(
-              color: Colors.white,
+              color: selectedFontColor,
               fontSize: fontSize,
               fontFamily: fontStyle["text"]);
         });
@@ -708,7 +800,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         decoration: BoxDecoration(
             color: buttonColor,
             borderRadius: BorderRadius.all(Radius.circular(5)),
-            border: Border.all(color: Colors.lightBlueAccent, width: 3)),
+            border: Border.all(color: highlightColor, width: 3)),
         child: Text(
           "Aa",
           style: font,
@@ -757,7 +849,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                     alignment: WrapAlignment.end,
                     children: <Widget>[
                       RaisedButton(
-                        child: Text('Done'),
+                        child: Text('Done',style:TextStyle(color:Colors.white)),
                         onPressed: () {
                           Navigator.pop(context);
                         },
@@ -782,7 +874,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Color.fromARGB(200, 102, 153, 204),
+          color: buttonColor,
           shape: BoxShape.rectangle,
         ),
         child: Column(
@@ -865,7 +957,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         disabledColor: buttonColor,
         child: Text(
           'Share',
-          style: TextStyle(fontSize: 12),
+          style: TextStyle(fontSize: 12, color:Colors.white),
         ),
         onPressed: () {
           if(!showProgressOnGenerate){

@@ -143,7 +143,6 @@ class _ZoomableImageState extends State<ZoomableImage> {
       widget.oldImageName=widget.imageName;
     }
 
-
     Widget paintWidget() {
       return new CustomPaint(
         child: new Container(color: widget.backgroundColor),
